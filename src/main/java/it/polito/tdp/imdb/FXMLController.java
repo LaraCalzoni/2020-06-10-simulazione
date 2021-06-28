@@ -5,8 +5,13 @@
 package it.polito.tdp.imdb;
 
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.ResourceBundle;
 
+import it.polito.tdp.imdb.model.Actor;
 import it.polito.tdp.imdb.model.Model;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -35,10 +40,10 @@ public class FXMLController {
     private Button btnSimulazione; // Value injected by FXMLLoader
 
     @FXML // fx:id="boxGenere"
-    private ComboBox<?> boxGenere; // Value injected by FXMLLoader
+    private ComboBox<String> boxGenere; // Value injected by FXMLLoader
 
     @FXML // fx:id="boxAttore"
-    private ComboBox<?> boxAttore; // Value injected by FXMLLoader
+    private ComboBox<Actor> boxAttore; // Value injected by FXMLLoader
 
     @FXML // fx:id="txtGiorni"
     private TextField txtGiorni; // Value injected by FXMLLoader
@@ -49,11 +54,56 @@ public class FXMLController {
     @FXML
     void doAttoriSimili(ActionEvent event) {
 
+    	txtResult.clear();
+    	/*
+    	if(this.model.grafo==null) { //cioè se il grafo non è ancora stato creato
+    		txtResult.appendText("Creare prima il grafico!");
+    		return;
+    	}
+    	*/
+    	Actor attore = this.boxAttore.getValue();
+    	List <Actor> raggiungibili = new ArrayList<>();
+    	for(Actor a : this.model.attoriRaggiungibili(attore)) {
+    		raggiungibili.add(a);
+    		//txtResult.appendText(""+a+"\n");
+    	}
+    	
+    	Collections.sort(raggiungibili, new Comparator<Actor>() {
+
+			@Override
+			public int compare(Actor o1, Actor o2) {
+				
+				return o1.getLastName().compareTo(o2.getLastName());
+			}
+    		
+    	});
+    	
+    	for(Actor aaa: raggiungibili) {
+    		if(!aaa.equals(attore)) {
+    			txtResult.appendText(aaa+"\n");
+    		}
+    	}
+    	
     }
 
     @FXML
     void doCreaGrafo(ActionEvent event) {
 
+    	txtResult.clear();
+    	this.boxAttore.getItems().clear();
+    	if(this.boxGenere.getValue()==null) {
+    		txtResult.appendText("Selezionare un genere!");
+    		return;
+    	}
+    	
+    	this.model.creaGrafo(this.boxGenere.getValue());
+    	
+    	txtResult.appendText("GRAFO CREATO!"+"\n");
+    	txtResult.appendText("# vertici : "+this.model.nVertici()+"\n");
+    	txtResult.appendText("# archi : "+this.model.nArchi()+"\n");
+    	
+      	this.boxAttore.getItems().addAll(model.getVertici());
+    	
     }
 
     @FXML
@@ -75,5 +125,6 @@ public class FXMLController {
     
     public void setModel(Model model) {
     	this.model = model;
+    	this.boxGenere.getItems().addAll(this.model.getGeneri());
     }
 }
